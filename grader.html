@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0c886d">
+
+  <title>CGPA Calculator for JMI</title>
+
+  <meta name="description" content="Portfolio and personal blog" />
+  <meta property="og:title" content="CGPA Calculator for JMI" />
+  <meta property="og:description" content="Use this tool to calculate your final CGPA" />
+
+  <meta property="og:determiner" content="the" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:site_name" content="CGPA Calculator for JMI" />
+  
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-174666473-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-174666473-1');
+  </script>
+</head>
+<body>
+  <article id="root" class="container">
+    <h1>CGPA Calculator for JMI</h1>
+    <p>
+      Enter your GPA for all semesters uptil now. <br>
+      Reload the page to reset.
+    </p>
+
+    <button class="button" onclick="addSemesters()">Add Semester</button>
+    <button class="button secondary" onclick="calcGrade()">Calculate Grade</button>
+
+    <div id="sgpa-values" style="padding-top: 1.5em; padding-bottom: 1.5em;">
+      {{ map(sgpa, createSem) }}
+    </div>
+
+    <div id="cgpa-values">
+      {{ displayGrade() }}
+    </div>
+  </article>
+</body>
+  <script>
+    window.onload = (event) => {
+      render()
+    }
+
+    var calcgrade
+    var sgpa = [
+      0
+    ]
+
+    function addSemesters(event) {
+      sgpa.push(0)
+      render()
+    }
+
+    function createSem(index, gpa) {
+      index++
+      
+      let container = document.createElement('div')
+      container.className = 'sgpa-container'
+      container.id = `sgpa-${index}`
+
+      let label = document.createElement('div')
+      label.id = `sgpa-${index}-text`
+      label.className = 'sem-label'
+      label.innerText = `${toNumberRank(index)} Semester`
+      container.appendChild(label)
+
+      let textbox = document.createElement('input')
+      textbox.id = `sgpa-${index}-value`
+      textbox.type = 'number'
+      textbox.className = 'textbox'
+      textbox.placeholder = 'Enter SGPA'
+      textbox.value = gpa
+      container.appendChild(textbox)
+
+      return container
+    }
+
+    function calcGrade(event) {
+      for (let index = 0; index < sgpa.length; index++)
+        sgpa[index] = document.getElementById(`sgpa-${index + 1}-value`).value
+
+      calcgrade = grade(sgpa)
+      render()
+
+      for (let index = 0; index < sgpa.length; index++)
+        document.getElementById(`sgpa-${index + 1}-value`).value = sgpa[index] 
+    }
+
+    function displayGrade() {
+      if (!calcgrade)
+        return String()
+
+      let node = document.createElement('div')
+      
+      let cgpa = document.createElement('h2')
+      cgpa.innerText = `CGPA ${calcgrade.cgpa}`
+
+      let div = document.createElement('h3')
+      div.innerText = `${calcgrade.div}`
+
+      let p = document.createElement('p')
+      p.innerHTML = 'The CGPA is a weighted average of the semester SGPAs, ' +
+        'according to <a style="color: darkgrey;" href="https://www.jmi.ac.in/upload/menuupload/ordinances_ac.pdf#page=151"><u>Ordinace 15-B (Undergraduate)</u></a> '+
+        'Article 5 Sections 3 through 5, which define the rules for marks and grades.'
+
+      node.appendChild(cgpa)
+      node.appendChild(div)
+      node.appendChild(p)
+
+      return node.innerHTML
+    }
+
+    function grade(g = []) {
+      const w = [ 0.25, 0.25, 0.5, 0.5, 0.75, 0.75, 1.0, 1.0 ]
+
+      let sigG = 0.0, sigC = 0.0
+      for (let i = 0; i < g.length; i++) {
+        sigG += g[i] * w[i];
+        sigC += 10 * w[i];
+      }
+
+      let cgpa = (sigG/sigC) * 10
+      cgpa = cgpa.toFixed(2)
+
+      let div = String()
+
+      if(cgpa>=8.5)
+        div = "FIRST Division, with honours"
+      else if(cgpa>=6.5 && cgpa<8.5)
+        div = "FIRST Division"
+      else if(cgpa<6.5 && cgpa>4.0)
+        div = "SECOND Division"
+      else
+        div = "Tu toh gaya"
+
+      console.log("CGPA", cgpa)
+      console.log(div)
+
+      return { cgpa, div }
+    }
+
+    // ----------------------------------------------------
+    var _DOM
+    function render() {
+      // If rendering for the first time
+      if(!_DOM)
+        _DOM = document.getElementById('root').innerHTML
+
+      let splits = _DOM.split(/{{|}}/g)
+      for (let i = 1; i < splits.length; i+=2) {
+        let token = splits[i]
+        try {
+          token = eval(token.trim())
+          splits[i] = token
+        } catch (InvalidCodeError) {
+          console.error(InvalidCodeError)
+        }
+      }
+
+      document.getElementById('root').innerHTML = splits.join('')
+    }
+
+    function map(iterable, reducer) {
+      let node = document.createElement('div')
+      node.innerHTML = String()
+      for (let idx = 0; idx < iterable.length; idx++) {
+        const element = iterable[idx]
+        node.appendChild(
+          reducer(idx, element)
+        )
+      }
+      
+      return node.innerHTML
+    }
+
+    function toNumberRank(num) {
+      switch (num % 10) {
+        case 1:
+          return `${num}st`
+        case 2:
+          return `${num}nd`
+        case 3:
+          return `${num}rd`
+        default:
+          return `${num}th`
+      }
+    }
+
+    var uppercase = (text) => text.toUpperCase()
+    var lowercase = (text) => text.toLowerCase()
+    var sentence = (text) => text.split(' ')
+      .map(token => token.substr(0, 1).toUpperCase() + token.substr(1, token.length).toLowerCase())
+      .join(' ')
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box !important;
+    }
+    body {
+      margin: 0;
+      font-family: 'Franklin Gothic Light', 'Arial Narrow', Arial, sans-serif;
+      font-size: 14;
+    }
+    /* Layouts */
+    article {
+      animation: fade-in 1s ease forwards;
+    }
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    h1 {
+      font-size: 2em;
+    }
+    h2 {
+      margin: 0.5em 0;
+    }
+    .container {
+      margin: auto;
+      max-width: 600px;
+      padding: 2em;
+    }
+    /* Links */
+    a {
+      color: cadetblue;
+      margin: 0.5em;
+      text-decoration: none;
+    }
+    a:visited {
+      color: teal;
+    }
+    a:first-of-type {
+      margin-left: 0;
+    }
+    a:last-of-type {
+      margin-right: 0;
+    }
+    a[class~='link-button'] {
+      padding: 0.5em 1em;
+      border: 1px solid cadetblue;
+      border-radius: 5px;
+    }
+    a:visited[class~='link-button'] {
+      border: 1px solid teal;
+      border-radius: 5px;
+    }
+    /* Button */
+    .button {
+      color: white;
+      padding: 1em 1.5em;
+      margin: 0.25em 0;
+      border: none;
+      border-radius: 5px;
+      background-color: royalblue;
+      box-shadow: 2px 2px 5px #aaa;
+    }
+    .button:disabled {
+      color: white;
+      background-color: lightgray;
+      box-shadow: none;
+    }
+    .button[class~="secondary"] {
+      /* color: black; */
+      background-color: #0c886d;
+    }
+    /* Textbox */
+    .textbox {
+      padding: 0;
+      margin: 0.25em 0;
+      /* border: 1.5px solid gray;
+      border-radius: 5px; */
+      border: none;
+      max-width: 10em;
+      font-size: 1.25em;
+    }
+    .textbox:focus {
+      outline: none;
+    }
+    .textbox[type=number]::-webkit-outer-spin-button,
+    .textbox[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+    .textbox[type=number] {
+      -moz-appearance: textfield;
+    }
+    /* Form */
+    form {
+      display: flex;
+      padding: 2em;
+      flex-direction: column;
+      max-width: 20em;
+    }
+    /*  */
+    .sem-label {
+      /* display: inline; */
+      padding: 0.5em 2em;
+      padding-left: 0;
+      padding-right: auto;
+      max-width: 15em;
+    }
+    .sgpa-container {
+      width: 50%;
+      padding: 0.75em 0;
+    }
+    #sgpa-values {
+      display: flex;
+      flex-flow: row;
+      flex-wrap: wrap;
+    }
+    #cgpa-values h2 {
+      margin: 0;
+    }
+    #cgpa-values h3 {
+      margin: 0;
+      color: cadetblue;
+    }
+    #cgpa-values p {
+      margin: 0.5em 0;
+      color: darkgrey;
+    }
+  </style>
+</html>
