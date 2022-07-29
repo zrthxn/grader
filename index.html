@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0c886d">
+  <meta name="theme-color" content="#1c1c1c">
 
   <title>CGPA Calculator for JMI</title>
 
@@ -22,18 +22,21 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'UA-174666473-1');
   </script>
 </head>
+
 <body>
-  <article id="root" class="container">
-    <h1>CGPA Calculator for JMI</h1>
+  <header class="container">
+    <h1>Grade Calculator</h1>
     <p>
-      Enter your GPA for all semesters uptil now. <br>
+      Get CGPA and percentage from your grades. <br>
+      Add your GPA for semesters completed uptil now. 
       Reload the page to reset.
     </p>
+  </header>
 
+  <article id="root" class="container">
     <button class="button" onclick="addSemesters()">Add Semester</button>
     <button class="button secondary" onclick="calcGrade()">Calculate Grade</button>
 
@@ -45,6 +48,14 @@
       {{ displayGrade() }}
     </div>
   </article>
+
+  <footer class="container">
+    <p>
+      <b>Problems? Want something new?</b> <br>
+      Tell me on <a href="https://github.com/zrthxn/grader">Github</a><br>
+      <span>&copy; zrthxn</span>
+    </p>
+  </footer>
 </body>
   <script>
     window.onload = (event) => {
@@ -103,15 +114,16 @@
       let node = document.createElement('div')
       
       let cgpa = document.createElement('h2')
-      cgpa.innerText = `CGPA ${calcgrade.cgpa}`
+      cgpa.innerHTML = `CGPA ${calcgrade.cgpa} <span id="pct-val">(${calcgrade.pct}%)</span>`
 
       let div = document.createElement('h3')
       div.innerText = `${calcgrade.div}`
 
       let p = document.createElement('p')
       p.innerHTML = 'The CGPA is a weighted average of the semester SGPAs, ' +
-        'according to <a style="color: darkgrey;" href="https://www.jmi.ac.in/upload/menuupload/ordinances_ac.pdf#page=151"><u>Ordinace 15-B (Undergraduate)</u></a> '+
-        'Article 5 Sections 3 through 5, which define the rules for marks and grades.'
+        'according to <a href="https://www.jmi.ac.in/upload/menuupload/ordinances_ac.pdf#page=151">Ordinace 15-B (Undergraduate)</a> '+
+        'Article 5 Sections 3 through 5, which define the rules for marks and grades. <br>' +
+        'Percentage is calculated using<a href="https://www.jmi.ac.in/upload/menuupload/ordinances_ac.pdf#page=163">this formula.</a>'
 
       node.appendChild(cgpa)
       node.appendChild(div)
@@ -131,6 +143,7 @@
 
       let cgpa = (sigG/sigC) * 10
       cgpa = cgpa.toFixed(2)
+      pct = percent(cgpa)
 
       let div = String()
 
@@ -143,10 +156,13 @@
       else
         div = "Tu toh gaya"
 
-      console.log("CGPA", cgpa)
-      console.log(div)
+      console.log("CGPA", cgpa, div)
+      return { cgpa, pct, div }
+    }
 
-      return { cgpa, div }
+    function percent(cgpa) {
+      let pct = ((20*Math.pow(cgpa,3)) - (380*Math.pow(cgpa,2)) + (2725*cgpa) - 1690) / 84
+      return pct.toFixed(2)
     }
 
     // ----------------------------------------------------
@@ -209,12 +225,19 @@
     }
     body {
       margin: 0;
-      font-family: 'Franklin Gothic Light', 'Arial Narrow', Arial, sans-serif;
+      font-family: Haettenschweiler, 'Arial Narrow Bold', sans-serif;
       font-size: 14;
+      background-color: #1c1c1c;
+      color: white;
     }
     /* Layouts */
     article {
       animation: fade-in 1s ease forwards;
+    }
+    footer {
+      font-size: smaller;
+      text-align: center;
+      opacity: 0.6;
     }
     @keyframes fade-in {
       from {
@@ -233,16 +256,16 @@
     .container {
       margin: auto;
       max-width: 600px;
-      padding: 2em;
+      padding: 0.5em 2em;
     }
     /* Links */
     a {
-      color: cadetblue;
+      color: cornflowerblue;
       margin: 0.5em;
       text-decoration: none;
     }
     a:visited {
-      color: teal;
+      color: royalblue;
     }
     a:first-of-type {
       margin-left: 0;
@@ -252,22 +275,23 @@
     }
     a[class~='link-button'] {
       padding: 0.5em 1em;
-      border: 1px solid cadetblue;
+      border: 1px solid cornflowerblue;
       border-radius: 5px;
     }
     a:visited[class~='link-button'] {
-      border: 1px solid teal;
+      border: 1px solid royalblue;
       border-radius: 5px;
     }
     /* Button */
     .button {
       color: white;
       padding: 1em 1.5em;
-      margin: 0.25em 0;
+      margin: 1em 0.5em 0 0;
+      font-weight: 600;
       border: none;
-      border-radius: 5px;
+      border-radius: 10px;
       background-color: royalblue;
-      box-shadow: 2px 2px 5px #aaa;
+      box-shadow: 5px 5px 3px 1px #07050e80;
     }
     .button:disabled {
       color: white;
@@ -276,17 +300,17 @@
     }
     .button[class~="secondary"] {
       /* color: black; */
-      background-color: #0c886d;
+      background-color: cornflowerblue;
     }
     /* Textbox */
     .textbox {
       padding: 0;
       margin: 0.25em 0;
-      /* border: 1.5px solid gray;
-      border-radius: 5px; */
+      background: transparent;
       border: none;
       max-width: 10em;
       font-size: 1.25em;
+      color: white;
     }
     .textbox:focus {
       outline: none;
@@ -314,8 +338,11 @@
       max-width: 15em;
     }
     .sgpa-container {
-      width: 50%;
-      padding: 0.75em 0;
+      padding: 0.75em 1em;
+      margin: 1em 1em 0 0;
+      border-radius: 5px;
+      background-color: #333;
+      box-shadow: 0 0 20px #00000020;
     }
     #sgpa-values {
       display: flex;
@@ -327,10 +354,14 @@
     }
     #cgpa-values h3 {
       margin: 0;
-      color: cadetblue;
+      color: cornflowerblue;
     }
     #cgpa-values p {
       margin: 0.5em 0;
+      color: darkgrey;
+    }
+    #cgpa-values #pct-val {
+      font-weight: normal;
       color: darkgrey;
     }
   </style>
